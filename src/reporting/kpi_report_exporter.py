@@ -56,7 +56,7 @@ class KPIReportExporter(ReportExporter):
         output_path.mkdir(parents=True, exist_ok=True)
         start_str = date_start.strftime('%Y_%m_%d')
         end_str = date_end.strftime('%Y_%m_%d')
-        filename = f'kpi_{hotel_id}_{start_str}to_{end_str}_.csv'
+        filename = f'kpi_{hotel_id}_{start_str}_to_{end_str}.csv'
         target = output_path / filename
         report_df.to_csv(target, index=False)
 
