@@ -60,32 +60,32 @@ class HotelReservationKPIPipeline:
         log.info('Starting pipeline execution')
 
         # Bronze: load raw datasets
-        reservations_raw = self.reservations_connector(reservations_json_path)
-        stay_dates_raw = self.stay_dates_connector(reservations_json_path)
-        inventory_raw = self.inventory_connector(inventory_csv_path)
+        bronze_reservations = self.reservations_connector(reservations_json_path)
+        bronze_stay_dates = self.stay_dates_connector(reservations_json_path)
+        bronze_inventory = self.inventory_connector(inventory_csv_path)
 
         # Silver: clean/validate raw data
-        reservations_silver = self.reservations_cleaner(reservations_raw)
-        stay_dates_silver = self.stay_dates_cleaner(stay_dates_raw)
-        inventory_silver = self.inventory_cleaner(inventory_raw)
+        silver_reservations = self.reservations_cleaner(bronze_reservations)
+        silver_stay_dates = self.stay_dates_cleaner(bronze_stay_dates)
+        silver_inventory = self.inventory_cleaner(bronze_inventory)
 
         # Gold: compute KPI dataframe
-        gold_kpis = self.performance_kpis.build(
-            reservations_df=reservations_silver,
-            stay_dates_df=stay_dates_silver,
-            inventory_df=inventory_silver,
+        gold_performance_kpis = self.performance_kpis.build(
+            reservations_df=silver_reservations,
+            stay_dates_df=silver_stay_dates,
+            inventory_df=silver_inventory,
         )
 
         # Reporting: filter and export CSV
         report_path = self.report_exporter.export_csv(
-            gold_df=gold_kpis,
+            gold_df=gold_performance_kpis,
             output_dir=report_output_dir,
             hotel_id=report_hotel_id,
             start_date=report_start_date,
             end_date=report_end_date,
         )
 
-        log.info('Pipeline completed with %s gold rows', len(gold_kpis))
+        log.info('Pipeline completed with %s gold rows', len(gold_performance_kpis))
         return report_path
 
 
