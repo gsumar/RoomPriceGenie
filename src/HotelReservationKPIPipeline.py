@@ -5,13 +5,12 @@ from pathlib import Path
 import pandas as pd
 
 # Bronze: raw data ingestion connectors
-from datalake.bronze.connectors import HotelRoomInventory, Reservations, StayDates
+from datalake.bronze.connectors import HotelRoomInventoryConnector, ReservationConnector
 
 # Silver: data quality/cleaning components
 from datalake.silver import (
     HotelRoomInventoryCleaner,
     ReservationsCleaner,
-    StayDatesCleaner,
 )
 
 # Gold: KPI aggregation logic
@@ -33,13 +32,11 @@ class HotelReservationKPIPipeline:
 
     def __init__(self) -> None:
         # Bronze (raw loaders)
-        self.reservations_connector = Reservations()
-        self.stay_dates_connector = StayDates()
-        self.inventory_connector = HotelRoomInventory()
+        self.reservation_connector = ReservationConnector()
+        self.inventory_connector = HotelRoomInventoryConnector()
 
         # Silver (cleaners)
         self.reservations_cleaner = ReservationsCleaner()
-        self.stay_dates_cleaner = StayDatesCleaner()
         self.inventory_cleaner = HotelRoomInventoryCleaner()
 
         # Gold (business KPI builder)
@@ -60,19 +57,16 @@ class HotelReservationKPIPipeline:
         log.info('Starting pipeline execution')
 
         # Bronze: load raw datasets
-        bronze_reservations = self.reservations_connector(reservations_json_path)
-        bronze_stay_dates = self.stay_dates_connector(reservations_json_path)
+        bronze_reservations = self.reservation_connector(reservations_json_path)
         bronze_inventory = self.inventory_connector(inventory_csv_path)
 
-        # Silver: clean/validate raw data
-        silver_reservations = self.reservations_cleaner(bronze_reservations)
-        silver_stay_dates = self.stay_dates_cleaner(bronze_stay_dates)
+        # Silver: validate and clean
+        silver_reservation_stays = self.reservations_cleaner(bronze_reservations)
         silver_inventory = self.inventory_cleaner(bronze_inventory)
 
-        # Gold: compute KPI dataframe
+        # Gold: split, compute KPI dataframe
         gold_performance_kpis = self.performance_kpis.build(
-            reservations_df=silver_reservations,
-            stay_dates_df=silver_stay_dates,
+            reservation_stays_df=silver_reservation_stays,
             inventory_df=silver_inventory,
         )
 
