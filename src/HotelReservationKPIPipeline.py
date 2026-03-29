@@ -56,7 +56,7 @@ class HotelReservationKPIPipeline:
             report_hotel_id: str,
             report_start_date: str,
             report_end_date: str,
-    ) -> tuple[pd.DataFrame, Path]:
+    ) -> Path:
         log.info('Starting pipeline execution')
 
         # Bronze: load raw datasets
@@ -86,7 +86,7 @@ class HotelReservationKPIPipeline:
         )
 
         log.info('Pipeline completed with %s gold rows', len(gold_kpis))
-        return gold_kpis, report_path
+        return report_path
 
 
 def _validate_date_range(from_date: str, to_date: str) -> None:
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     root = Path(__file__).parents[1]
     pipeline = HotelReservationKPIPipeline()
 
-    _, report_path = pipeline.run(
+    report_path = pipeline.run(
         reservations_json_path=root / 'external-systems' / 'odyssey' / 'reservations_data.json',
         inventory_csv_path=root / 'external-systems' / 'db' / 'hotel_room_inventory.csv',
         report_output_dir=root / args.output_dir,
