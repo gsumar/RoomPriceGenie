@@ -10,7 +10,7 @@ from datalake.bronze.connectors import HotelRoomInventoryConnector, ReservationC
 # Silver: data quality/cleaning components
 from datalake.silver import (
     HotelRoomInventoryCleaner,
-    ReservationsCleaner,
+    ReservationsCurater,
 )
 
 # Gold: KPI aggregation logic
@@ -36,7 +36,7 @@ class HotelReservationKPIPipeline:
         self.inventory_connector = HotelRoomInventoryConnector()
 
         # Silver (cleaners)
-        self.reservations_cleaner = ReservationsCleaner()
+        self.reservations_curater = ReservationsCurater()
         self.inventory_cleaner = HotelRoomInventoryCleaner()
 
         # Gold (business KPI builder)
@@ -60,13 +60,17 @@ class HotelReservationKPIPipeline:
         bronze_reservations = self.reservation_connector(reservations_json_path)
         bronze_inventory = self.inventory_connector(inventory_csv_path)
 
-        # Silver: validate and clean
-        silver_reservation_stays = self.reservations_cleaner(bronze_reservations)
+        # Silver: validate/clean then normalize into parent/child tables
+        reservations_validated = self.reservations_curater.validate(bronze_reservations)
+        silver_reservations, silver_stay_dates = self.reservations_curater.normalize_tables(
+            reservations_validated
+        )
         silver_inventory = self.inventory_cleaner(bronze_inventory)
 
-        # Gold: split, compute KPI dataframe
+        # Gold: compute KPI dataframe from normalized Silver tables
         gold_performance_kpis = self.performance_kpis.build(
-            reservation_stays_df=silver_reservation_stays,
+            reservations_df=silver_reservations,
+            stay_dates_df=silver_stay_dates,
             inventory_df=silver_inventory,
         )
 

@@ -12,20 +12,29 @@ class PerformanceKPIs(GoldBuilder):
 
     def build(
         self,
-        reservation_stays_df: pd.DataFrame,
+        reservations_df: pd.DataFrame,
+        stay_dates_df: pd.DataFrame,
         inventory_df: pd.DataFrame,
     ) -> pd.DataFrame:
         _empty = pd.DataFrame(
             columns=['hotel_id', 'NIGHT_OF_STAY', 'OCCUPANCY_PERCENTAGE', 'TOTAL_NET_REVENUE', 'ADR']
         )
 
-        if reservation_stays_df.empty:
+        if stay_dates_df.empty or reservations_df.empty:
             return _empty
 
-        merged = reservation_stays_df.copy()
+        merged = stay_dates_df.merge(
+            reservations_df[['hotel_id', 'reservation_id', 'status']],
+            on=['hotel_id', 'reservation_id'],
+            how='inner',
+        )
         merged['status'] = merged['status'].astype('string').str.lower()
 
-        merged = merged.merge(inventory_df[['hotel_id', 'room_type_id']], on=['hotel_id', 'room_type_id'], how='inner')
+        merged = merged.merge(
+            inventory_df[['hotel_id', 'room_type_id']],
+            on=['hotel_id', 'room_type_id'],
+            how='inner',
+        )
         if merged.empty:
             return _empty
 

@@ -119,7 +119,7 @@ def compare_reports(medallion_path, qa_path, tolerance=0.01):
 
 def main():
     root = Path(__file__).parents[1]
-    medallion_path = root / 'reports' / 'kpi_1035_2026_05_01to_2026_05_31_.csv'
+    medallion_path = root / 'reports' / 'kpi_1035_2026_05_01_to_2026_05_31.csv'
     qa_path = root / 'qa' / 'kpi_1035_qa_pure_python.csv'
     
     if not medallion_path.exists():

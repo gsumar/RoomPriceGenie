@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 registry = SchemaRegistry()
 
 
-class ReservationsCleaner(SilverCleaner):
+class ReservationsCurater(SilverCleaner):
     """Validate Odyssey reservations as whole records and flatten valid stay rows."""
 
     SOURCE = 'odyssey/reservations_data'
@@ -99,6 +99,27 @@ class ReservationsCleaner(SilverCleaner):
             len(cleaned),
         )
         return cleaned
+
+    def validate(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Alias for clean() to make the validation intent explicit."""
+        return self.clean(df)
+
+    def normalize_tables(self, validated_df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Split validated Silver rows into parent reservations and child stay_dates tables."""
+        if validated_df.empty:
+            reservations_df = pd.DataFrame(columns=self.RESERVATION_COLUMNS)
+            stay_dates_df = pd.DataFrame(columns=['hotel_id', 'reservation_id'] + self.STAY_DATE_COLUMNS)
+            return reservations_df, stay_dates_df
+
+        reservations_df = (
+            validated_df[self.RESERVATION_COLUMNS]
+            .sort_values('updated_at')
+            .drop_duplicates(subset=['hotel_id', 'reservation_id'], keep='last')
+            .copy()
+        )
+
+        stay_dates_df = validated_df[['hotel_id', 'reservation_id'] + self.STAY_DATE_COLUMNS].copy()
+        return reservations_df, stay_dates_df
 
     @staticmethod
     def _reservation_period_is_valid(reservation: dict) -> bool:
