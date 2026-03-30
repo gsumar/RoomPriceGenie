@@ -17,7 +17,7 @@ class PerformanceKPIs(GoldBuilder):
         inventory_df: pd.DataFrame,
     ) -> pd.DataFrame:
         _empty = pd.DataFrame(
-            columns=['hotel_id', 'NIGHT_OF_STAY', 'OCCUPANCY_PERCENTAGE', 'TOTAL_NET_REVENUE', 'ADR']
+            columns=['hotel_id', 'night_of_stay', 'occupancy_percentage', 'total_net_revenue', 'adr']
         )
 
         if stay_dates_df.empty or reservations_df.empty:
@@ -42,23 +42,23 @@ class PerformanceKPIs(GoldBuilder):
         if expanded.empty:
             return _empty
 
-        # OCCUPANCY_PERCENTAGE: Count only non-cancelled reservations
+        # occupancy_percentage: Count only non-cancelled reservations
         occupancy_expanded = expanded[expanded['status'] != 'cancelled']
         occupancy = (
-            occupancy_expanded.groupby(['hotel_id', 'NIGHT_OF_STAY'], as_index=False)
+            occupancy_expanded.groupby(['hotel_id', 'night_of_stay'], as_index=False)
             .size()
             .rename(columns={'size': 'occupied_rooms'})
         )
 
-        # TOTAL_NET_REVENUE: Include all reservations regardless of status
+        # total_net_revenue: Include all reservations regardless of status
         revenue = (
-            expanded.groupby(['hotel_id', 'NIGHT_OF_STAY'], as_index=False)
+            expanded.groupby(['hotel_id', 'night_of_stay'], as_index=False)
             .agg(
                 room_net_revenue=('room_net_revenue_per_night', 'sum'),
                 fnb_net_revenue=('fnb_net_revenue_per_night', 'sum'),
             )
         )
-        revenue['TOTAL_NET_REVENUE'] = revenue['room_net_revenue'] + revenue['fnb_net_revenue']
+        revenue['total_net_revenue'] = revenue['room_net_revenue'] + revenue['fnb_net_revenue']
 
         total_rooms = (
             inventory_df.groupby('hotel_id', as_index=False)
@@ -66,28 +66,28 @@ class PerformanceKPIs(GoldBuilder):
             .astype({'hotel_id': 'string'})
         )
 
-        kpis = occupancy.merge(revenue, on=['hotel_id', 'NIGHT_OF_STAY'], how='outer')
+        kpis = occupancy.merge(revenue, on=['hotel_id', 'night_of_stay'], how='outer')
         kpis = kpis.merge(total_rooms, on='hotel_id', how='left')
 
         kpis['occupied_rooms'] = kpis['occupied_rooms'].fillna(0)
         kpis['room_net_revenue'] = kpis['room_net_revenue'].fillna(0.0)
-        kpis['TOTAL_NET_REVENUE'] = kpis['TOTAL_NET_REVENUE'].fillna(0.0)
+        kpis['total_net_revenue'] = kpis['total_net_revenue'].fillna(0.0)
         kpis['total_rooms'] = kpis['total_rooms'].fillna(0)
 
-        kpis['OCCUPANCY_PERCENTAGE'] = 0.0
+        kpis['occupancy_percentage'] = 0.0
         has_inventory = kpis['total_rooms'] > 0
-        kpis.loc[has_inventory, 'OCCUPANCY_PERCENTAGE'] = (
+        kpis.loc[has_inventory, 'occupancy_percentage'] = (
             (kpis.loc[has_inventory, 'occupied_rooms'] / kpis.loc[has_inventory, 'total_rooms'])
             * 100.0
         )
-        kpis['OCCUPANCY_PERCENTAGE'] = kpis['OCCUPANCY_PERCENTAGE'].round(2)
+        kpis['occupancy_percentage'] = kpis['occupancy_percentage'].round(2)
 
-        kpis['TOTAL_NET_REVENUE'] = kpis['TOTAL_NET_REVENUE'].round(2)
+        kpis['total_net_revenue'] = kpis['total_net_revenue'].round(2)
 
-        kpis['ADR'] = 0
+        kpis['adr'] = 0
         has_occupied = kpis['occupied_rooms'] > 0
-        kpis.loc[has_occupied, 'ADR'] = (
-            (kpis.loc[has_occupied, 'TOTAL_NET_REVENUE'] / kpis.loc[has_occupied, 'occupied_rooms'])
+        kpis.loc[has_occupied, 'adr'] = (
+            (kpis.loc[has_occupied, 'total_net_revenue'] / kpis.loc[has_occupied, 'occupied_rooms'])
             .round(0)
             .astype('int64')
         )
@@ -95,10 +95,10 @@ class PerformanceKPIs(GoldBuilder):
         kpis = kpis[
             [
                 'hotel_id',
-                'NIGHT_OF_STAY',
-                'OCCUPANCY_PERCENTAGE',
-                'TOTAL_NET_REVENUE',
-                'ADR',
+                'night_of_stay',
+                'occupancy_percentage',
+                'total_net_revenue',
+                'adr',
             ]
         ]
 
@@ -123,7 +123,7 @@ class PerformanceKPIs(GoldBuilder):
                         'hotel_id': record['hotel_id'],
                         'reservation_id': record['reservation_id'],
                         'status': record['status'],
-                        'NIGHT_OF_STAY': night,
+                        'night_of_stay': night,
                         'room_net_revenue_per_night': room_per_night,
                         'fnb_net_revenue_per_night': fnb_per_night,
                     }

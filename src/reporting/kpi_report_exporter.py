@@ -31,26 +31,34 @@ class KPIReportExporter(ReportExporter):
         date_end = pd.Timestamp(end_date).normalize()
 
         date_spine = pd.DataFrame(
-            {'NIGHT_OF_STAY': pd.date_range(start=date_start, end=date_end, freq='D')}
+            {'night_of_stay': pd.date_range(start=date_start, end=date_end, freq='D')}
         )
 
         filtered = gold_df.copy()
         if not filtered.empty:
             filtered['hotel_id'] = filtered['hotel_id'].astype('string')
-            filtered['NIGHT_OF_STAY'] = pd.to_datetime(filtered['NIGHT_OF_STAY'], errors='coerce')
+            filtered['night_of_stay'] = pd.to_datetime(filtered['night_of_stay'], errors='coerce')
             filtered = filtered[
                 (filtered['hotel_id'] == hotel_id)
-                & (filtered['NIGHT_OF_STAY'] >= date_start)
-                & (filtered['NIGHT_OF_STAY'] <= date_end)
+                & (filtered['night_of_stay'] >= date_start)
+                & (filtered['night_of_stay'] <= date_end)
             ]
 
-        report_df = date_spine.merge(filtered, on='NIGHT_OF_STAY', how='left')
-        report_df['OCCUPANCY_PERCENTAGE'] = report_df['OCCUPANCY_PERCENTAGE'].fillna(0.0)
-        report_df['TOTAL_NET_REVENUE'] = report_df['TOTAL_NET_REVENUE'].fillna(0.0)
-        report_df['ADR'] = report_df['ADR'].fillna(0.0)
+        report_df = date_spine.merge(filtered, on='night_of_stay', how='left')
+        report_df['occupancy_percentage'] = report_df['occupancy_percentage'].fillna(0.0)
+        report_df['total_net_revenue'] = report_df['total_net_revenue'].fillna(0.0)
+        report_df['adr'] = report_df['adr'].fillna(0.0)
 
-        report_df = report_df[self.OUTPUT_COLUMNS].sort_values('NIGHT_OF_STAY', ascending=False)
-        report_df['NIGHT_OF_STAY'] = report_df['NIGHT_OF_STAY'].dt.strftime('%Y-%m-%d')
+        report_df = report_df[['night_of_stay', 'occupancy_percentage', 'total_net_revenue', 'adr']].sort_values('night_of_stay', ascending=False)
+        report_df['night_of_stay'] = report_df['night_of_stay'].dt.strftime('%Y-%m-%d')
+        
+        # Rename to UPPERCASE for CSV export
+        report_df = report_df.rename(columns={
+            'night_of_stay': 'NIGHT_OF_STAY',
+            'occupancy_percentage': 'OCCUPANCY_PERCENTAGE',
+            'total_net_revenue': 'TOTAL_NET_REVENUE',
+            'adr': 'ADR',
+        })
 
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)

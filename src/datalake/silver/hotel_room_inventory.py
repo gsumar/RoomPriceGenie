@@ -2,32 +2,31 @@ import logging
 
 import pandas as pd
 
-from ..schema_registry import SchemaRegistry
 from .base import SilverCleaner
 
 
 log = logging.getLogger(__name__)
-registry = SchemaRegistry()
 
 
 class HotelRoomInventoryCleaner(SilverCleaner):
-    """Clean hotel inventory rows used for occupancy denominators."""
-
-    SOURCE = 'db/hotel_room_inventory'
-    VERSION = 'v1'
+    """Pass through hotel inventory rows with minimal type coercion only (no validation/cleanup).
+    
+    ASSUMPTION: Hotel room inventory data is trusted to be correct at the source.
+    We assume the source system (database export) has already validated data quality.
+    
+    This cleaner only applies essential type coercion to ensure compatibility with downstream
+    merges and aggregations. No schema validation, no value filtering, no deduplication.
+    """
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
-        cleaned = registry.validate_and_transform_rows(self.SOURCE, self.VERSION, df)
-
-        if cleaned.empty:
-            return pd.DataFrame(columns=['hotel_id', 'room_type_id', 'quantity'])
-
+        """Return inventory rows with type coercion only.
+        
+        No validation, no filtering, no deduplication — only cast types for merge compatibility.
+        """
+        cleaned = df.copy()
         cleaned['hotel_id'] = cleaned['hotel_id'].astype('string')
         cleaned['room_type_id'] = cleaned['room_type_id'].astype('string')
         cleaned['quantity'] = cleaned['quantity'].astype('int64')
-
-        cleaned = cleaned[cleaned['quantity'] >= 0]
-        cleaned = cleaned.drop_duplicates(subset=['hotel_id', 'room_type_id'], keep='last')
-
-        log.info('Cleaned inventory rows: %s', len(cleaned))
+        
+        log.info('Passed through inventory rows: %s (type coercion only, no validation applied)', len(cleaned))
         return cleaned
