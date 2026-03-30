@@ -4,15 +4,35 @@
 
 ---
 
+## ⚙️ Setup
+
+All commands assume you are in the project root (the folder containing this README).
+
+**1. Create a virtual environment using Python if you wish:**
+```bash
+python3.11 -m venv .venv
+```
+
+**2. Activate the virtual environment:**
+```bash
+source .venv/bin/activate
+```
+
+**3. Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+---
+
 ## 🚀 How to Run the Pipeline
 
-All commands must be run from the project root. `PYTHONPATH=src` is required so Python can resolve the internal packages.
+All commands must be run from the project root with the virtual environment active. `PYTHONPATH=src` is required so Python can resolve the internal packages.
 
 ### Default run
 Uses hotel `1035`, dates `2026-05-01 → 2026-05-31`, output to `reports/`:
 
 ```bash
-cd /Users/gorka/Documents/workspace/RoomPriceGenie
 PYTHONPATH=src python src/HotelReservationKPIPipeline.py
 ```
 
@@ -20,7 +40,6 @@ PYTHONPATH=src python src/HotelReservationKPIPipeline.py
 Positional arguments: `hotel_id`, `from_date`, `to_date`
 
 ```bash
-cd /Users/gorka/Documents/workspace/RoomPriceGenie
 PYTHONPATH=src python src/HotelReservationKPIPipeline.py 1035 2026-05-01 2026-05-31
 ```
 
@@ -28,7 +47,6 @@ PYTHONPATH=src python src/HotelReservationKPIPipeline.py 1035 2026-05-01 2026-05
 Use `--output-dir` to write the CSV to a different folder (default: `reports/`):
 
 ```bash
-cd /Users/gorka/Documents/workspace/RoomPriceGenie
 PYTHONPATH=src python src/HotelReservationKPIPipeline.py 1035 2026-05-01 2026-05-31 --output-dir reports
 ```
 
@@ -239,7 +257,7 @@ Rather than trying to "salvage" individual corrupted pieces of a reservation, th
 
 ## 🧪 QA & Output Validation
 
-The `qa/` folder contains an **independent validation suite** built to verify that the pipeline produces correct KPI outputs. It was designed as a second opinion — a completely separate implementation of the same logic — so that any discrepancy between the two points directly to a real issue.
+The `qa/` folder contains an **independent validation suite** built to verify that the pipeline produces correct KPI outputs. it was designed as a second opinion — a completely separate implementation of the same logic — so that any discrepancy between the two points directly to a real issue.
 
 ### How It Works
 
@@ -259,7 +277,6 @@ The QA script deliberately avoids pandas and any shared library with the pipelin
 
 **Step 1 — Generate the independent QA output:**
 ```bash
-cd /Users/gorka/Documents/workspace/RoomPriceGenie
 python qa/qa_pure_python.py
 ```
 
