@@ -1,0 +1,19 @@
+{
+  "version": "v1",
+  "description": "Hotel room inventory from database",
+  "schema": {
+    "hotel_id": {
+      "type": "coerce_string",
+      "required": true
+    },
+    "room_type_id": {
+      "type": "coerce_string",
+      "required": true
+    },
+    "quantity": {
+      "type": "int",
+      "required": true
+    }
+  },
+  "mapping": {}
+}

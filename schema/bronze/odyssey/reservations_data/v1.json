@@ -1,0 +1,74 @@
+{
+  "version": "v1",
+  "description": "Odyssey raw reservation payload contract",
+  "schema": {
+    "hotel_id": {
+      "type": "string",
+      "required": true
+    },
+    "reservation_id": {
+      "type": "string",
+      "required": true
+    },
+    "status": {
+      "type": "string",
+      "required": true,
+      "enum": ["confirmed", "cancelled", "checked_in", "checked_out"]
+    },
+    "arrival_date": {
+      "type": "date",
+      "required": true
+    },
+    "departure_date": {
+      "type": "date",
+      "required": true
+    },
+    "created_at": {
+      "type": "datetime",
+      "required": true
+    },
+    "updated_at": {
+      "type": "datetime",
+      "required": true
+    },
+    "stay_dates": {
+      "type": "list",
+      "required": true,
+      "item_schema": {
+        "start_date": {
+          "type": "date",
+          "required": true
+        },
+        "end_date": {
+          "type": "date",
+          "required": true
+        },
+        "room_type_id": {
+          "type": "string",
+          "required": true
+        },
+        "room_type_name": {
+          "type": "string",
+          "required": true
+        },
+        "room_revenue_gross_amount": {
+          "type": "float_string",
+          "required": true
+        },
+        "room_revenue_net_amount": {
+          "type": "float_string",
+          "required": true
+        },
+        "fnb_gross_amount": {
+          "type": "float_string",
+          "required": false
+        },
+        "fnb_net_amount": {
+          "type": "float_string",
+          "required": false
+        }
+      }
+    }
+  },
+  "mapping": {}
+}
