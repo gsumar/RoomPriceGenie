@@ -192,33 +192,9 @@ hotel_id | night_of_stay | occupancy_percentage | total_net_revenue | adr
 
 ### 📊 Reporting Layer — Emulating a BI Consumer
 
-> *"Every date in the requested range appears in the output, even if no activity occurred."*
-
 The `KPIReportExporter` is designed to emulate what a BI tool (e.g. Tableau, Looker) expects when generating dashboards: **a complete date spine with no gaps**. For every day in the requested `from_date → to_date` range, a row is guaranteed to exist — even if there were zero bookings that night. Missing dates are zero-filled (`OCCUPANCY_PERCENTAGE = 0`, `TOTAL_NET_REVENUE = 0`, `ADR = 0`).
 
 The report is filtered by `hotel_id` and sorted by `NIGHT_OF_STAY` descending (most recent first), matching the convention of most revenue management dashboards.
-
-> **Assumption:** in a production system, this layer would be replaced by a direct connection from the BI tool to the Gold table in a data warehouse. The CSV export here emulates that consumption pattern for the purposes of this challenge.
-
----
-
-The implementation follows a **medallion-style** flow orchestrated by `src/HotelReservationKPIPipeline.py`:
-
-| Layer | Path | Responsibility |
-|-------|------|----------------|
-| 🥉 **Bronze** | `src/datalake/bronze/connectors` | Raw data loaders for reservations, stay dates, and hotel room inventory |
-| 🥈 **Silver** | `src/datalake/silver` | Entity-level cleaners with a shared `clean` contract |
-| 🥇 **Gold** | `src/datalake/gold/performance_kpis.py` | Nightly KPI aggregation per hotel |
-| 📊 **Reporting** | `src/reporting/kpi_report_exporter.py` | Filters by hotel/date range and exports a sorted CSV, zero-filling missing dates |
-
-### Gold KPI Columns
-
-| Column | Description |
-|--------|-------------|
-| `NIGHT_OF_STAY` | The calendar night being reported |
-| `OCCUPANCY_PERCENTAGE` | Percentage of rooms occupied |
-| `TOTAL_NET_REVENUE` | Total net revenue for that night |
-| `ADR` | Average Daily Rate |
 
 ---
 
